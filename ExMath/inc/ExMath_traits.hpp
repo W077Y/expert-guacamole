@@ -384,6 +384,68 @@ namespace ExMath
   }
 
   template <readable_static_matrix_concept T> constexpr auto transpose(T const& val) { return transpose_view_t<T>{ val }; }
+
+  template <readable_static_matrix_concept T> requires(T::number_of_rows == T::number_of_columns) constexpr auto inverse(T const& value)
+  {
+    using value_type = typename T::value_type;
+    using mat_t      = static_matrix_t<T::number_of_rows, T::number_of_columns, value_type>;
+
+    auto swap_rows = [](mat_t& mat, index_t const& r1, index_t const& r2)
+    {
+      for (index_t col = 0; col < mat_t::number_of_columns; col++)
+        std::swap(mat(r1, col), mat(r2, col));
+    };
+
+    auto div_row = [](mat_t& mat, value_type const& val, index_t const& row)
+    {
+      for (index_t col = 0; col < mat_t::number_of_columns; col++)
+        mat(row, col) /= val;
+    };
+
+    auto sub_scl_rows = [](mat_t& mat, value_type const& val, index_t const& r1, index_t const& r2)
+    {
+      for (index_t col = 0; col < mat_t::number_of_columns; col++)
+        mat(r1, col) -= mat(r2, col) * val;
+    };
+
+    mat_t erg = identity_matrix_t<mat_t::number_of_rows, mat_t::number_of_columns, value_type>();
+    mat_t val = value;
+    for (index_t row = 0; row < mat_t::number_of_rows; row++)
+    {
+      index_t    sel_idx = row;
+      value_type fac     = val(row, row);
+      for (index_t idx = row + 1; idx < mat_t::number_of_rows; idx++)
+      {
+        if (fac < val(idx, row))
+        {
+          sel_idx = idx;
+          fac     = val(idx, row);
+        }
+      }
+
+      if (sel_idx != row)
+      {
+        swap_rows(val, sel_idx, row);
+        swap_rows(erg, sel_idx, row);
+      }
+
+      if (fac != 1.0)
+      {
+        div_row(val, fac, row);
+        div_row(erg, fac, row);
+      }
+
+      for (index_t idx = 0; idx < mat_t::number_of_rows; idx++)
+      {
+        if (idx == row)
+          continue;
+        value_type const fac = val(idx, row);
+        sub_scl_rows(val, fac, idx, row);
+        sub_scl_rows(erg, fac, idx, row);
+      }
+    }
+    return erg;
+  }
 }    // namespace ExMath
 
 #endif
