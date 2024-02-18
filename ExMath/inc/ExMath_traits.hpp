@@ -150,6 +150,11 @@ namespace ExMath
         for (index_t row = 0; row < Erg::number_of_rows; row++)
           erg(row, col) = val(row, col) * scale;
     }
+
+    template <writeable_static_matrix_concept Lhs, writeable_static_matrix_concept Rhs>
+    requires(Lhs::number_of_rows == Lhs::number_of_columns && Lhs::number_of_rows == Rhs::number_of_rows) constexpr void solve(Lhs& lhs, Rhs& rhs)
+    {
+    }
   }    // namespace Internal
 }    // namespace ExMath
 
