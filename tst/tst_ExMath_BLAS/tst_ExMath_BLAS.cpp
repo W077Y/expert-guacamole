@@ -299,3 +299,48 @@ TEST_CASE()
       REQUIRE(e2(row, col) == Approx(t1(row, col)));
     }
 }
+
+TEST_CASE()
+{
+  using T1 = N::static_matrix_t<3, 3, double>;
+  using TE = N::static_matrix_t<3, 2, double>;
+
+  // clang-format off
+  T1 m = { 1.0, 4.0, 0.0,
+           2.0, 6.0, 2.0,
+           3.0, 8.0, 1.0 };
+  
+  TE x = { 5.0, 5.0,
+           5.0, 2.0, 
+           2.0, 5.0 };
+  // clang-format on
+
+  auto b = m * x;
+  auto e = N::solve(m, b);
+
+  REQUIRE(b.number_of_rows == 3);
+  REQUIRE(b.number_of_columns == 2);
+  REQUIRE(e.number_of_rows == 3);
+  REQUIRE(e.number_of_columns == 2);
+
+  for (N::index_t row = 0; row < e.number_of_rows; row++)
+    for (N::index_t col = 0; col < e.number_of_columns; col++)
+    {
+      REQUIRE(e(row, col) == Approx(x(row, col)));
+    }
+
+  auto bT = N::transpose(x) * N::transpose(m);
+
+  auto eT = N::transpose(N::solve(m, N::transpose(bT)));
+
+  REQUIRE(bT.number_of_rows == 2);
+  REQUIRE(bT.number_of_columns == 3);
+  REQUIRE(eT.number_of_rows == 2);
+  REQUIRE(eT.number_of_columns == 3);
+
+  for (N::index_t row = 0; row < x.number_of_rows; row++)
+    for (N::index_t col = 0; col < x.number_of_columns; col++)
+    {
+      REQUIRE(N::transpose(eT)(row, col) == Approx(x(row, col)));
+    }
+}
